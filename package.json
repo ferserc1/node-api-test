@@ -1,0 +1,27 @@
+{
+  "name": "api-test",
+  "version": "1.0.0",
+  "description": "An example of using n-api to create native packages for node",
+  "main": "index.js",
+  "gypfile": true,
+  "scripts": {
+    "build": "node-gyp rebuild",
+    "clean": "node-gyp clean"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ferserc1/node-api-test.git"
+  },
+  "author": "Fernando Serrano Carpena",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ferserc1/node-api-test/issues"
+  },
+  "homepage": "https://github.com/ferserc1/node-api-test#readme",
+  "devDependencies": {
+    "node-gyp": "^8.4.1"
+  },
+  "dependencies": {
+    "node-addon-api": "^4.2.0"
+  }
+}
