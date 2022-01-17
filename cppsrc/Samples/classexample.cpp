@@ -26,13 +26,28 @@ ClassExample::ClassExample(const Napi::CallbackInfo& info)
     Napi::Env env = info.Env();
     Napi::HandleScope scope(env);
 
-    int length = info.Length();
-    if (length != 1 || !info[0].IsNumber()) {
-        Napi::TypeError::New(env, "Se esperaba un número").ThrowAsJavaScriptException();
+    if (info.Length() != 1) {
+        Napi::TypeError::New(env, "Se esperaba exactamente un argumento").ThrowAsJavaScriptException();
     }
 
-    Napi::Number value = info[0].As<Napi::Number>();
-    _actualClass = new ActualClass(value.DoubleValue());
+    if (!info[0].IsNumber()) {
+        Napi::Object object_parent = info[0].As<Napi::Object>();
+        ClassExample* example_parent = Napi::ObjectWrap<ClassExample>::Unwrap(object_parent);
+        ActualClass* parent_actual_class_instance = example_parent->GetInternalInstance();
+        _actualClass = new ActualClass(parent_actual_class_instance->getValue());
+    }
+    else if (info[0].IsNumber()) {
+        Napi::Number value = info[0].As<Napi::Number>();
+        _actualClass = new ActualClass(value.DoubleValue());
+    }
+    else {
+        Napi::TypeError::New(env, "Se esperaba un número o una instancia de ClassExample").ThrowAsJavaScriptException();
+    }
+}
+
+ActualClass* ClassExample::GetInternalInstance()
+{
+    return _actualClass;
 }
 
 Napi::Value ClassExample::GetValue(const Napi::CallbackInfo& info)

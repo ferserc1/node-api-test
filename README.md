@@ -313,3 +313,65 @@ El resto del código es similar al que hemos creado en el caso de funciones: el 
 ```c++
 _actualClass = new ActualClass(value.DoubleValue());
 ```
+
+## Pasar objetos complejos a C++
+
+En este caso, nos referimos a pasar una instancia de una clase definida en C++, a la parte nativa. Para ver este ejemplo, vamos a hacer que el constructor de nuestro wrapper acepte dos tipos de datos: o bien un número, para funcionar como hasta ahora, o bien una instancia de ClassExample, para inicializar la nueva clase con el valor de la instancia:
+
+**index.js:**
+
+```js
+...
+const classInstance = new testAddon.ClassExample(4.3);
+const valueToAdd = 3;
+console.log(`Testing classInstance value: ${ classInstance.getValue() }`);
+console.log(`After adding ${ valueToAdd }: ${ classInstance.add(valueToAdd) }`);
+
+// Crear una instancia a partir de otra
+const newFromExisting = new testAddon.ClassExample(classInstance);
+console.log("Testing class initial value for derived instance");
+console.log(newFromExisting.getValue());
+...
+
+```
+
+**cppsrc/Samples/classexample.cpp:**
+
+```c++
+...
+ClassExample::ClassExample(const Napi::CallbackInfo& info)
+    : Napi::ObjectWrap<ClassExample>(info)
+{
+    Napi::Env env = info.Env();
+    Napi::HandleScope scope(env);
+
+    if (info.Length() != 1) {
+        Napi::TypeError::New(env, "Se esperaba exactamente un argumento").ThrowAsJavaScriptException();
+    }
+
+    if (!info[0].IsNumber()) {
+        Napi::Object object_parent = info[0].As<Napi::Object>();
+        ClassExample* example_parent = Napi::ObjectWrap<ClassExample>::Unwrap(object_parent);
+        ActualClass* parent_actual_class_instance = example_parent->GetInternalInstance();
+        _actualClass = new ActualClass(parent_actual_class_instance->getValue());
+    }
+    else if (info[0].IsNumber()) {
+        Napi::Number value = info[0].As<Napi::Number>();
+        _actualClass = new ActualClass(value.DoubleValue());
+    }
+    else {
+        Napi::TypeError::New(env, "Se esperaba un número o una instancia de ClassExample").ThrowAsJavaScriptException();
+    }
+}
+
+// También añadimos un accessor para obtener la instancia de ActualClass
+ActualClass* ClassExample::GetInternalInstance()
+{
+    return _actualClass;
+}
+...
+```
+
+NOTA: recuerda definir `GetInternalInstance` en la cabecera de `ClassExample`
+
+
